@@ -1,4 +1,6 @@
-import RNFetchBlob from '../index.js'
+// import RNFetchBlob from '../index.js'
+import { NativeModules } from 'react-native'
+const RNFetchBlob = NativeModules.RNFetchBlob
 import Log from '../utils/log.js'
 import fs from '../fs'
 import unicode from '../utils/unicode'
@@ -11,7 +13,7 @@ log.disable()
 
 export default class Fetch {
 
-  constructor(config:RNFetchBlobConfig) {
+  constructor(config: RNFetchBlobConfig) {
     Object.assign(this, new RNFetchBlobFetchPolyfill(config))
   }
 
@@ -19,7 +21,7 @@ export default class Fetch {
 
 class RNFetchBlobFetchPolyfill {
 
-  constructor(config:RNFetchBlobConfig) {
+  constructor(config: RNFetchBlobConfig) {
     this.build = () => (url, options = {}) => {
 
       let body = options.body
@@ -32,10 +34,10 @@ class RNFetchBlobFetchPolyfill {
       options.headers['Content-Type'] = ctype || ctypeH
       options.headers['content-type'] = ctype || ctypeH
       options.method = options.method || 'GET'
-      if(body) {
+      if (body) {
         // When the request body is an instance of FormData, create a Blob cache
         // to upload the body.
-        if(body instanceof FormData) {
+        if (body instanceof FormData) {
           log.verbose('convert FormData to blob body')
           promise = Blob.build(body).then((b) => {
             blobCache = b
@@ -59,23 +61,23 @@ class RNFetchBlobFetchPolyfill {
       // cancel function
       let progressHandler, uploadHandler, cancelHandler
       let statefulPromise = promise
-          .then((body) => {
-            let task = RNFetchBlob.config(config)
-              .fetch(options.method, url, options.headers, body)
-            if(progressHandler)
-              task.progress(progressHandler)
-            if(uploadHandler)
-              task.uploadProgress(uploadHandler)
-            if(cancelHandler)
-              task.cancel()
-            return task.then((resp) => {
-              log.verbose('response', resp)
-              // release blob cache created when sending request
-              if(blobCache !== null && blobCache instanceof Blob)
-                blobCache.close()
-              return Promise.resolve(new RNFetchBlobFetchRepsonse(resp))
-            })
+        .then((body) => {
+          let task = RNFetchBlob.config(config)
+            .fetch(options.method, url, options.headers, body)
+          if (progressHandler)
+            task.progress(progressHandler)
+          if (uploadHandler)
+            task.uploadProgress(uploadHandler)
+          if (cancelHandler)
+            task.cancel()
+          return task.then((resp) => {
+            log.verbose('response', resp)
+            // release blob cache created when sending request
+            if (blobCache !== null && blobCache instanceof Blob)
+              blobCache.close()
+            return Promise.resolve(new RNFetchBlobFetchRepsonse(resp))
           })
+        })
 
       // extend task.then progress with report and cancelling functions
       statefulPromise.progress = (fn) => {
@@ -86,7 +88,7 @@ class RNFetchBlobFetchPolyfill {
       }
       statefulPromise.cancel = () => {
         cancelHandler = true
-        if(task.cancel)
+        if (task.cancel)
           task.cancel()
       }
 
@@ -99,11 +101,11 @@ class RNFetchBlobFetchPolyfill {
 
 class RNFetchBlobFetchRepsonse {
 
-  constructor(resp:FetchBlobResponse) {
+  constructor(resp: FetchBlobResponse) {
     let info = resp.info()
     this.headers = info.headers
     this.ok = info.status >= 200 && info.status <= 299,
-    this.status = info.status
+      this.status = info.status
     this.type = 'basic'
     this.bodyUsed = false
     this.resp = resp
@@ -115,7 +117,7 @@ class RNFetchBlobFetchRepsonse {
     return Promise.resolve(this.rnfbResp)
   }
 
-  arrayBuffer(){
+  arrayBuffer() {
     log.verbose('to arrayBuffer', this.rnfbRespInfo)
     this.bodyUsed = true
     return readArrayBuffer(this.rnfbResp, this.rnfbRespInfo)
@@ -146,7 +148,7 @@ class RNFetchBlobFetchRepsonse {
  * @param  {RNFetchBlobResponseInfo} info Response informations.
  * @return {Promise<Array>}
  */
-function readArrayBuffer(resp, info):Promise<Array> {
+function readArrayBuffer(resp, info): Promise<Array> {
   switch (info.rnfbEncode) {
     case 'path':
       return resp.readFile('ascii')
@@ -168,7 +170,7 @@ function readArrayBuffer(resp, info):Promise<Array> {
  * @param  {RNFetchBlobResponseInfo} info Response informations.
  * @return {Promise<string>}
  */
-function readText(resp, info):Promise<string> {
+function readText(resp, info): Promise<string> {
   switch (info.rnfbEncode) {
     case 'base64':
       return Promise.resolve(resp.text())
@@ -189,7 +191,7 @@ function readText(resp, info):Promise<string> {
  * @param  {RNFetchBlobResponseInfo} info Response informations.
  * @return {Promise<Blob>}
  */
-function readBlob(resp, info):Promise<Blob> {
+function readBlob(resp, info): Promise<Blob> {
   log.verbose('readBlob', resp, info)
   return resp.blob()
 }
@@ -200,7 +202,7 @@ function readBlob(resp, info):Promise<Blob> {
  * @param  {RNFetchBlobResponseInfo} info Response informations.
  * @return {Promise<object>}
  */
-function readJSON(resp, info):Promise<object> {
+function readJSON(resp, info): Promise<object> {
   log.verbose('readJSON', resp, info)
   switch (info.rnfbEncode) {
     case 'base64':

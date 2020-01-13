@@ -2,7 +2,9 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
-import RNFetchBlob from '../index.js'
+// import RNFetchBlob from '../index.js'
+import { NativeModules } from 'react-native'
+const RNFetchBlob = NativeModules.RNFetchBlob
 import XMLHttpRequestEventTarget from './XMLHttpRequestEventTarget.js'
 import Log from '../utils/log.js'
 import Blob from './Blob.js'
@@ -20,40 +22,40 @@ const HEADERS_RECEIVED = 2
 const LOADING = 3
 const DONE = 4
 
-export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
+export default class XMLHttpRequest extends XMLHttpRequestEventTarget {
 
-  _onreadystatechange : () => void;
+  _onreadystatechange: () => void;
 
-  upload : XMLHttpRequestEventTarget = new XMLHttpRequestEventTarget();
-  static binaryContentTypes : Array<string> = [
+  upload: XMLHttpRequestEventTarget = new XMLHttpRequestEventTarget();
+  static binaryContentTypes: Array<string> = [
     'image/', 'video/', 'audio/'
   ];
 
   // readonly
-  _readyState : number = UNSENT;
-  _uriType : 'net' | 'file' = 'net';
-  _response : any = '';
-  _responseText : any = '';
-  _responseHeaders : any = {};
-  _responseType : '' | 'arraybuffer' | 'blob'  | 'json' | 'text' = '';
+  _readyState: number = UNSENT;
+  _uriType: 'net' | 'file' = 'net';
+  _response: any = '';
+  _responseText: any = '';
+  _responseHeaders: any = {};
+  _responseType: '' | 'arraybuffer' | 'blob' | 'json' | 'text' = '';
   // TODO : not suppoted ATM
-  _responseURL : null = '';
-  _responseXML : null = '';
-  _status : number = 0;
-  _statusText : string = '';
-  _timeout : number = 60000;
-  _sendFlag : boolean = false;
-  _uploadStarted : boolean = false;
-  _increment : boolean = false;
+  _responseURL: null = '';
+  _responseXML: null = '';
+  _status: number = 0;
+  _statusText: string = '';
+  _timeout: number = 60000;
+  _sendFlag: boolean = false;
+  _uploadStarted: boolean = false;
+  _increment: boolean = false;
 
   // RNFetchBlob compatible data structure
-  _config : RNFetchBlobConfig = {};
-  _url : any;
-  _method : string;
+  _config: RNFetchBlobConfig = {};
+  _url: any;
+  _method: string;
   _headers: any = {
-    'Content-Type' : 'text/plain'
+    'Content-Type': 'text/plain'
   };
-  _cleanUp : () => void = null;
+  _cleanUp: () => void = null;
   _body: any;
 
   // RNFetchBlob promise object, which has `progress`, `uploadProgress`, and
@@ -87,16 +89,16 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
     return DONE
   }
 
-  static setLog(level:number) {
-    if(level === -1)
+  static setLog(level: number) {
+    if (level === -1)
       log.disable()
     else
       log.level(level)
   }
 
-  static addBinaryContentType(substr:string) {
-    for(let i in XMLHttpRequest.binaryContentTypes) {
-      if(new RegExp(substr,'i').test(XMLHttpRequest.binaryContentTypes[i])) {
+  static addBinaryContentType(substr: string) {
+    for (let i in XMLHttpRequest.binaryContentTypes) {
+      if (new RegExp(substr, 'i').test(XMLHttpRequest.binaryContentTypes[i])) {
         return
       }
     }
@@ -105,9 +107,9 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
   }
 
   static removeBinaryContentType(val) {
-    for(let i in XMLHttpRequest.binaryContentTypes) {
-      if(new RegExp(substr,'i').test(XMLHttpRequest.binaryContentTypes[i])) {
-        XMLHttpRequest.binaryContentTypes.splice(i,1)
+    for (let i in XMLHttpRequest.binaryContentTypes) {
+      if (new RegExp(substr, 'i').test(XMLHttpRequest.binaryContentTypes[i])) {
+        XMLHttpRequest.binaryContentTypes.splice(i, 1)
         return
       }
     }
@@ -128,7 +130,7 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
    * @param  {any} user NOT SUPPORTED
    * @param  {any} password NOT SUPPORTED
    */
-  open(method:string, url:string, async:true, user:any, password:any) {
+  open(method: string, url: string, async: true, user: any, password: any) {
     log.verbose('XMLHttpRequest open ', method, url, async, user, password)
     this._method = method
     this._url = url
@@ -146,33 +148,33 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
 
     this._body = body
 
-    if(this._readyState !== XMLHttpRequest.OPENED)
+    if (this._readyState !== XMLHttpRequest.OPENED)
       throw 'InvalidStateError : XMLHttpRequest is not opened yet.'
     let promise = Promise.resolve()
     this._sendFlag = true
     log.verbose('XMLHttpRequest send ', body)
-    let {_method, _url, _headers } = this
+    let { _method, _url, _headers } = this
     log.verbose('sending request with args', _method, _url, _headers, body)
     log.verbose(typeof body, body instanceof FormData)
 
-    if(body instanceof Blob) {
+    if (body instanceof Blob) {
       log.debug('sending blob body', body._blobCreated)
       promise = new Promise((resolve, reject) => {
-          body.onCreated((blob) => {
-            // when the blob is derived (not created by RN developer), the blob
-            // will be released after XMLHttpRequest sent
-            if(blob.isDerived) {
-              this._cleanUp = () => {
-                blob.close()
-              }
+        body.onCreated((blob) => {
+          // when the blob is derived (not created by RN developer), the blob
+          // will be released after XMLHttpRequest sent
+          if (blob.isDerived) {
+            this._cleanUp = () => {
+              blob.close()
             }
-            log.debug('body created send request')
-            body = RNFetchBlob.wrap(blob.getRNFetchBlobRef())
-            resolve()
-          })
+          }
+          log.debug('body created send request')
+          body = RNFetchBlob.wrap(blob.getRNFetchBlobRef())
+          resolve()
         })
+      })
     }
-    else if(typeof body === 'object') {
+    else if (typeof body === 'object') {
       body = JSON.stringify(body)
       promise = Promise.resolve()
     }
@@ -183,40 +185,40 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
 
     promise.then(() => {
       log.debug('send request invoke', body)
-      for(let h in _headers) {
+      for (let h in _headers) {
         _headers[h] = _headers[h].toString()
       }
 
       this._task = RNFetchBlob
-                    .config({
-                      auto: true,
-                      timeout : this._timeout,
-                      increment : this._increment,
-                      binaryContentTypes : XMLHttpRequest.binaryContentTypes
-                    })
-                    .fetch(_method, _url, _headers, body)
+        .config({
+          auto: true,
+          timeout: this._timeout,
+          increment: this._increment,
+          binaryContentTypes: XMLHttpRequest.binaryContentTypes
+        })
+        .fetch(_method, _url, _headers, body)
       this._task
-          .stateChange(this._headerReceived)
-          .uploadProgress(this._uploadProgressEvent)
-          .progress(this._progressEvent)
-          .catch(this._onError)
-          .then(this._onDone)
+        .stateChange(this._headerReceived)
+        .uploadProgress(this._uploadProgressEvent)
+        .progress(this._progressEvent)
+        .catch(this._onError)
+        .then(this._onDone)
 
     })
   }
 
-  overrideMimeType(mime:string) {
+  overrideMimeType(mime: string) {
     log.verbose('XMLHttpRequest overrideMimeType', mime)
     this._headers['Content-Type'] = mime
   }
 
   setRequestHeader(name, value) {
     log.verbose('XMLHttpRequest set header', name, value)
-    if(this._readyState !== OPENED || this._sendFlag) {
+    if (this._readyState !== OPENED || this._sendFlag) {
       throw `InvalidStateError : Calling setRequestHeader in wrong state  ${this._readyState}`
     }
     // UNICODE SHOULD NOT PASS
-    if(typeof name !== 'string' || /[^\u0000-\u00ff]/.test(name)) {
+    if (typeof name !== 'string' || /[^\u0000-\u00ff]/.test(name)) {
       throw 'TypeError : header field name should be a string'
     }
     //
@@ -224,8 +226,8 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
       /[\(\)\>\<\@\,\:\\\/\[\]\?\=\}\{\s\ \u007f\;\t\0\v\r]/,
       /tt/
     ]
-    for(let i in invalidPatterns) {
-      if(invalidPatterns[i].test(name) || typeof name !== 'string') {
+    for (let i in invalidPatterns) {
+      if (invalidPatterns[i].test(name) || typeof name !== 'string') {
         throw `SyntaxError : Invalid header field name ${name}`
       }
     }
@@ -234,15 +236,15 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
 
   abort() {
     log.verbose('XMLHttpRequest abort ')
-    if(!this._task)
+    if (!this._task)
       return
     this._task.cancel((err) => {
       let e = {
-        timeStamp : Date.now(),
+        timeStamp: Date.now(),
       }
-      if(this.onabort)
+      if (this.onabort)
         this.onabort()
-      if(err) {
+      if (err) {
         e.detail = err
         e.type = 'error'
         this.dispatchEvent('error', e)
@@ -254,30 +256,30 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
     })
   }
 
-  getResponseHeader(field:string):string | null {
+  getResponseHeader(field: string): string | null {
     log.verbose('XMLHttpRequest get header', field, this._responseHeaders)
-    if(!this._responseHeaders)
+    if (!this._responseHeaders)
       return null
     return (this._responseHeaders[field] || this._responseHeaders[field.toLowerCase()]) || null
 
   }
 
-  getAllResponseHeaders():string | null {
+  getAllResponseHeaders(): string | null {
     log.verbose('XMLHttpRequest get all headers', this._responseHeaders)
-    if(!this._responseHeaders)
+    if (!this._responseHeaders)
       return ''
     let result = ''
     let respHeaders = this.responseHeaders
-    for(let i in respHeaders) {
-      result += `${i}: ${respHeaders[i]}${String.fromCharCode(0x0D,0x0A)}`
+    for (let i in respHeaders) {
+      result += `${i}: ${respHeaders[i]}${String.fromCharCode(0x0D, 0x0A)}`
     }
-    return result.substr(0, result.length-2)
+    return result.substr(0, result.length - 2)
   }
 
   _headerReceived = (e) => {
     log.debug('header received ', this._task.taskId, e)
     this.responseURL = this._url
-    if(e.state === "2" && e.taskId === this._task.taskId) {
+    if (e.state === "2" && e.taskId === this._task.taskId) {
       this._responseHeaders = e.headers
       this._statusText = e.status
       this._status = Math.floor(e.status)
@@ -285,26 +287,26 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
     }
   }
 
-  _uploadProgressEvent = (send:number, total:number) => {
-    if(!this._uploadStarted) {
+  _uploadProgressEvent = (send: number, total: number) => {
+    if (!this._uploadStarted) {
       this.upload.dispatchEvent('loadstart')
       this._uploadStarted = true
     }
-    if(send >= total)
+    if (send >= total)
       this.upload.dispatchEvent('load')
     this.upload.dispatchEvent('progress', new ProgressEvent(true, send, total))
   }
 
-  _progressEvent = (send:number, total:number, chunk:string) => {
+  _progressEvent = (send: number, total: number, chunk: string) => {
     log.verbose(this.readyState)
-    if(this._readyState === XMLHttpRequest.HEADERS_RECEIVED)
+    if (this._readyState === XMLHttpRequest.HEADERS_RECEIVED)
       this._dispatchReadStateChange(XMLHttpRequest.LOADING)
     let lengthComputable = false
-    if(total && total >= 0)
-        lengthComputable = true
+    if (total && total >= 0)
+      lengthComputable = true
     let e = new ProgressEvent(lengthComputable, send, total)
 
-    if(this._increment) {
+    if (this._increment) {
       this._responseText += chunk
     }
     this.dispatchEvent('progress', e)
@@ -312,7 +314,7 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
 
   _onError = (err) => {
     let statusCode = Math.floor(this.status)
-    if(statusCode >= 100 && statusCode !== 408) {
+    if (statusCode >= 100 && statusCode !== 408) {
       return
     }
     log.debug('XMLHttpRequest error', err)
@@ -320,13 +322,13 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
     this._status = String(err).match(/\d+/)
     this._status = this._status ? Math.floor(this.status) : 404
     this._dispatchReadStateChange(XMLHttpRequest.DONE)
-    if(err && String(err.message).match(/(timed\sout|timedout)/) || this._status == 408) {
+    if (err && String(err.message).match(/(timed\sout|timedout)/) || this._status == 408) {
       this.dispatchEvent('timeout')
     }
     this.dispatchEvent('loadend')
     this.dispatchEvent('error', {
-      type : 'error',
-      detail : err
+      type: 'error',
+      detail: err
     })
     this.clearEventListeners()
   }
@@ -341,29 +343,29 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
       this._dispatchReadStateChange(XMLHttpRequest.DONE)
       this.clearEventListeners()
     }
-    if(resp) {
+    if (resp) {
       let info = resp.respInfo || {}
       log.debug(this._url, info, info.respType)
-      switch(this._responseType) {
-        case 'blob' :
+      switch (this._responseType) {
+        case 'blob':
           resp.blob().then((b) => {
             this._responseText = resp.text()
             this._response = b
             responseDataReady()
           })
-        break;
+          break;
         case 'arraybuffer':
           // TODO : to array buffer
-        break
+          break
         case 'json':
           this._response = resp.json()
           this._responseText = resp.text()
-        break
-        default :
+          break
+        default:
           this._responseText = resp.text()
           this._response = this.responseText
           responseDataReady()
-        break;
+          break;
       }
     }
 
@@ -371,11 +373,11 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
 
   _dispatchReadStateChange(state) {
     this._readyState = state
-    if(typeof this._onreadystatechange === 'function')
+    if (typeof this._onreadystatechange === 'function')
       this._onreadystatechange()
   }
 
-  set onreadystatechange(fn:() => void) {
+  set onreadystatechange(fn: () => void) {
     log.verbose('XMLHttpRequest set onreadystatechange', fn)
     this._onreadystatechange = fn
   }
@@ -420,7 +422,7 @@ export default class XMLHttpRequest extends XMLHttpRequestEventTarget{
   }
 
   set timeout(val) {
-    this._timeout = val*1000
+    this._timeout = val * 1000
     log.verbose('set timeout', this._timeout)
   }
 

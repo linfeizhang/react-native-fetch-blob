@@ -2,7 +2,9 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
-import RNFetchBlob from '../index.js'
+// import RNFetchBlob from '../index.js'
+import { NativeModules } from 'react-native'
+const RNFetchBlob = NativeModules.RNFetchBlob
 import ProgressEvent from './ProgressEvent.js'
 import EventTarget from './EventTarget'
 import Blob from './Blob'
@@ -15,30 +17,30 @@ log.level(3)
 
 export default class FileReader extends EventTarget {
 
-  static get EMPTY(){
+  static get EMPTY() {
     return 0
   }
-  static get LOADING(){
+  static get LOADING() {
     return 1
   }
-  static get DONE(){
+  static get DONE() {
     return 2
   }
 
   // properties
-  _readState:number = 0;
-  _result:any;
-  _error:any;
+  _readState: number = 0;
+  _result: any;
+  _error: any;
 
-  get isRNFBPolyFill(){ return true }
+  get isRNFBPolyFill() { return true }
 
   // event handlers
-  onloadstart:(e:Event) => void;
-  onprogress:(e:Event) => void;
-  onload:(e:Event) => void;
-  onabort:(e:Event) => void;
-  onerror:(e:Event) => void;
-  onloadend:(e:Event) => void;
+  onloadstart: (e: Event) => void;
+  onprogress: (e: Event) => void;
+  onload: (e: Event) => void;
+  onabort: (e: Event) => void;
+  onerror: (e: Event) => void;
+  onloadend: (e: Event) => void;
 
   constructor() {
     super()
@@ -50,26 +52,26 @@ export default class FileReader extends EventTarget {
     log.verbose('abort')
   }
 
-  readAsArrayBuffer(b:Blob) {
+  readAsArrayBuffer(b: Blob) {
     log.verbose('readAsArrayBuffer', b)
   }
 
-  readAsBinaryString(b:Blob) {
+  readAsBinaryString(b: Blob) {
     log.verbose('readAsBinaryString', b)
   }
 
-  readAsText(b:Blob, label:?string) {
+  readAsText(b: Blob, label: ?string) {
     log.verbose('readAsText', b, label)
   }
 
-  readAsDataURL(b:Blob) {
+  readAsDataURL(b: Blob) {
     log.verbose('readAsDataURL', b)
   }
 
   dispatchEvent(event, e) {
     log.verbose('dispatch event', event, e)
     super.dispatchEvent(event, e)
-    if(typeof this[`on${event}`] === 'function') {
+    if (typeof this[`on${event}`] === 'function') {
       this[`on${event}`](e)
     }
   }
